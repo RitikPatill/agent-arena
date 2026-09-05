@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_arena"]
+
+[project]
+name = "agent-arena"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.27",
+    "openai>=1.30",
+    "pydantic>=2.7",
+    "pyyaml>=6.0",
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+    "streamlit>=1.35",
+    "plotly>=5.22",
+    "httpx>=0.27",
+    "typer>=0.12",
+]
+
+[project.scripts]
+arena = "agent_arena.cli:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "ruff>=0.4",
+    "pre-commit>=3.7",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

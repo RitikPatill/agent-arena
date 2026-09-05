@@ -12,17 +12,21 @@ Agent engineering has shifted from "can you make it work?" to "can you prove ver
 
 ## Status
 
-M1 — scaffold complete. The repo layout, tooling, and CI pipeline are in place. No runtime features are implemented yet; all items in [Features](#features) are planned for M2–M9.
+M2 — core agent runner complete. Provider-agnostic `AgentRunner`, SQLite persistence, and built-in tools are implemented and tested.
 
-**What M1 ships:**
+**What M2 ships:**
 
-- `src/agent_arena/` package with `py.typed` marker and `arena` CLI entry point registered via `pyproject.toml`
-- `tests/` with a smoke test confirming the package is importable
-- `examples/` and `docs/` directories (stubs, populated in later milestones)
-- `pyproject.toml` — hatchling build backend, full dependency declarations, ruff and pytest configuration
-- `.pre-commit-config.yaml` — ruff lint and format hooks
-- `.github/workflows/ci.yml` — lint (`ruff check`) and test (`pytest`) on every push and pull request
-- MIT `LICENSE` and `.gitignore`
+- `AgentConfig`, `Task`, `Run`, `Span` — Pydantic/SQLModel models persisted to SQLite
+- `db.py` — `init_db()`, `get_session()`, configurable via `ARENA_DB_URL` env var
+- `tools.py` — `calculator` (safe AST evaluator), `web_search_stub`, tool registry + `@tool` decorator
+- `runner.py` — `AgentRunner` with Anthropic + OpenAI tool-calling loop; spans persisted per LLM/tool call; `max_turns` guard (default 10)
+- 11 unit tests with mocked LLM clients and in-memory SQLite — no API key required for `pytest`
+
+**What M1 shipped:**
+
+- `src/agent_arena/` package with `py.typed` marker and `arena` CLI entry point
+- `pyproject.toml` — hatchling build, ruff, pytest configuration
+- `.pre-commit-config.yaml`, `.github/workflows/ci.yml`, MIT `LICENSE`, `.gitignore`
 
 ---
 
@@ -59,15 +63,35 @@ flowchart LR
 
 ## Quickstart
 
-> The commands below will work once M3 (agent runner) and M6 (CLI) are complete. The package installs cleanly today and the `arena` entry point is registered.
-
 ```bash
 git clone https://github.com/agent-arena/agent-arena.git
 cd agent-arena
-pip install -e .
+pip install -e ".[dev]"
 export ANTHROPIC_API_KEY=sk-ant-...
-arena demo
+
+# Run tests (no API key needed — uses mocked LLM clients)
+pytest
+
+# Use the runner directly
+python - <<'EOF'
+from agent_arena import AgentConfig, AgentRunner, Task, init_db
+from sqlmodel import Session, create_engine
+
+init_db()
+engine = create_engine("sqlite:///arena.db", connect_args={"check_same_thread": False})
+with Session(engine) as session:
+    config = AgentConfig(
+        name="demo", provider="anthropic", model="claude-3-haiku-20240307",
+        system_prompt="You are a helpful assistant.", tools=["calculator"], params={},
+    )
+    session.add(config); session.commit()
+    runner = AgentRunner(config, session)
+    run = runner.run(Task(input="What is 123 * 456?"))
+    print(run.status, run.output)
+EOF
 ```
+
+> Full CLI (`arena run`, `arena demo`) and the Streamlit dashboard are coming in M5+.
 
 ---
 
@@ -76,14 +100,13 @@ arena demo
 | Milestone | Description | Status |
 |-----------|-------------|--------|
 | M1 | Scaffold: repo layout, pyproject.toml, CI, pre-commit, LICENSE | Done |
-| M2 | Data models + SQLite persistence (Run, Span, Judgement) | |
-| M3 | Agent runner with Anthropic + OpenAI tool-calling | |
-| M4 | Built-in tools: calculator, web_search_stub, python_exec_sandbox | |
-| M5 | LLM-as-judge with YAML rubrics | |
-| M6 | FastAPI backend + CLI (arena run / judge / compare) | |
-| M7 | Streamlit dashboard: config manager + task browser | |
-| M8 | Live run view + leaderboard + head-to-head heatmap | |
-| M9 | Trace viewer + demo.gif + docs | |
+| M2 | Core agent runner + provider abstraction + SQLite persistence | Done |
+| M3 | YAML task suites; `python_exec_sandbox` tool | |
+| M4 | LLM-as-judge with YAML rubrics | |
+| M5 | FastAPI backend + CLI (`arena run` / `judge` / `compare`) | |
+| M6 | Streamlit dashboard: config manager + task browser | |
+| M7 | Live run view + leaderboard + head-to-head heatmap | |
+| M8 | Trace viewer + demo.gif + docs | |
 
 ---
 

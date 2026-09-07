@@ -1,0 +1,63 @@
+name: customer_support
+description: "12 inbound support queries testing helpfulness and tone."
+version: "1.0"
+tasks:
+  - id: cs-001
+    input: "I was charged twice for my order #4821. Please fix this."
+    reference: "Apologize, confirm the duplicate charge, initiate a refund for the extra amount, and give an ETA."
+    meta: {difficulty: easy, category: billing}
+
+  - id: cs-002
+    input: "I want to return a jacket I bought 3 weeks ago. It doesn't fit."
+    reference: "Acknowledge the return request, check if it's within the return window, explain the return process, and provide next steps."
+    meta: {difficulty: easy, category: returns}
+
+  - id: cs-003
+    input: "I forgot my password and can't log in. I've tried resetting it but I'm not getting the email."
+    reference: "Apologize for the inconvenience, ask for the registered email address, check the spam folder tip, and offer to manually trigger a reset or escalate."
+    meta: {difficulty: medium, category: account}
+
+  - id: cs-004
+    input: "Your website says my order shipped but FedEx says they never received it. It's been 5 days."
+    reference: "Apologize, acknowledge the discrepancy, open an investigation with the carrier, offer to reship or refund, and give a timeline for resolution."
+    meta: {difficulty: medium, category: shipping}
+
+  - id: cs-005
+    input: "I need to change the delivery address for order #9034. It hasn't shipped yet."
+    reference: "Confirm the order status, update the delivery address if still possible, and notify the customer of the change or limitations."
+    meta: {difficulty: easy, category: orders}
+
+  - id: cs-006
+    input: "The product I received is completely different from what I ordered. I ordered blue but got red."
+    reference: "Apologize for the error, offer to send the correct item with expedited shipping, and arrange return of the wrong item at no cost."
+    meta: {difficulty: easy, category: orders}
+
+  - id: cs-007
+    input: "I've been waiting 45 minutes on hold. This is absolutely unacceptable. I want to speak to a manager."
+    reference: "Sincerely apologize for the wait time, acknowledge the frustration without being defensive, and either connect to a manager or offer a callback with a specific timeframe."
+    meta: {difficulty: hard, category: escalation}
+
+  - id: cs-008
+    input: "Can I use two discount codes on the same order?"
+    reference: "Clearly explain the discount stacking policy (one code per order is standard), and offer any available alternatives such as the better-value code."
+    meta: {difficulty: easy, category: promotions}
+
+  - id: cs-009
+    input: "I bought a laptop last month. Now it won't turn on at all. Is this covered under warranty?"
+    reference: "Express empathy, confirm the warranty coverage period, explain the warranty claim process, and offer to start the claim or escalate to technical support."
+    meta: {difficulty: medium, category: warranty}
+
+  - id: cs-010
+    input: "Your app keeps crashing on my iPhone 14 every time I try to check out. I've tried reinstalling."
+    reference: "Apologize for the disruption, ask for iOS version details, provide known workarounds, and escalate to the technical team with an estimated fix timeline."
+    meta: {difficulty: medium, category: technical}
+
+  - id: cs-011
+    input: "I cancelled my subscription last week but I was still charged this month."
+    reference: "Apologize, verify the cancellation date vs billing date, issue a full refund for the erroneous charge, and confirm the subscription is cancelled."
+    meta: {difficulty: medium, category: billing}
+
+  - id: cs-012
+    input: "I want to leave a review but the website won't let me. It says my order isn't eligible."
+    reference: "Explain the review eligibility criteria (e.g., verified purchase, time window), and offer an alternative channel for feedback."
+    meta: {difficulty: easy, category: feedback}

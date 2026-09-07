@@ -1,0 +1,20 @@
+name: helpfulness
+description: "Measures how well an agent response serves the user's actual need."
+version: "1.0"
+criteria:
+  - name: accuracy
+    description: "Is the information factually correct and free of hallucinations?"
+    weight: 0.4
+    scale: 5
+  - name: completeness
+    description: "Does the response address all parts of the user's request?"
+    weight: 0.3
+    scale: 5
+  - name: tone
+    description: "Is the response appropriately polite and professional?"
+    weight: 0.2
+    scale: 5
+  - name: conciseness
+    description: "Is the response free of unnecessary padding or repetition?"
+    weight: 0.1
+    scale: 5

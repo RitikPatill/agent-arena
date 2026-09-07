@@ -1,0 +1,53 @@
+name: math_word_problems
+description: "10 elementary-to-intermediate word problems for testing numeric reasoning."
+version: "1.0"
+tasks:
+  - id: mwp-001
+    input: "A store sells apples for $0.75 each. If Sara buys 12 apples and pays with a $10 bill, how much change does she receive?"
+    reference: "1.00"
+    meta: {difficulty: easy, topic: arithmetic}
+
+  - id: mwp-002
+    input: "A train travels at 60 mph. How long does it take to travel 225 miles?"
+    reference: "3.75 hours"
+    meta: {difficulty: easy, topic: arithmetic}
+
+  - id: mwp-003
+    input: "A rectangle has a length of 14 cm and a width of 9 cm. What is its area?"
+    reference: "126 square centimeters"
+    meta: {difficulty: easy, topic: geometry}
+
+  - id: mwp-004
+    input: "If 5 workers can build a fence in 8 days, how many days would it take 10 workers to build the same fence, assuming they all work at the same rate?"
+    reference: "4 days"
+    meta: {difficulty: medium, topic: arithmetic}
+
+  - id: mwp-005
+    input: "A laptop originally costs $1,200. It's on sale for 15% off. What is the sale price?"
+    reference: "$1,020"
+    meta: {difficulty: easy, topic: arithmetic}
+
+  - id: mwp-006
+    input: "Solve for x: 3x + 7 = 22"
+    reference: "x = 5"
+    meta: {difficulty: easy, topic: algebra}
+
+  - id: mwp-007
+    input: "A circular swimming pool has a radius of 5 meters. What is the area of the pool? (Use π ≈ 3.14159)"
+    reference: "78.54 square meters"
+    meta: {difficulty: medium, topic: geometry}
+
+  - id: mwp-008
+    input: "Maria invests $2,000 at a simple interest rate of 4% per year. How much total interest does she earn after 3 years?"
+    reference: "$240"
+    meta: {difficulty: medium, topic: arithmetic}
+
+  - id: mwp-009
+    input: "A car depreciates in value by 20% per year. If it is worth $25,000 today, what will it be worth after 2 years?"
+    reference: "$16,000"
+    meta: {difficulty: medium, topic: arithmetic}
+
+  - id: mwp-010
+    input: "Two numbers have a sum of 40 and a difference of 12. What are the two numbers?"
+    reference: "26 and 14"
+    meta: {difficulty: hard, topic: algebra}

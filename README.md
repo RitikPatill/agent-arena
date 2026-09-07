@@ -12,9 +12,30 @@ Agent engineering has shifted from "can you make it work?" to "can you prove ver
 
 ## Status
 
-M2 — core agent runner complete. Provider-agnostic `AgentRunner`, SQLite persistence, and built-in tools are implemented and tested.
+M3 — YAML task suites and rubrics complete. Pydantic-validated loaders with SHA-256 content hashing, five example YAML files, and CLI inspection commands are implemented and tested.
 
-**What M2 ships:**
+**What M3 ships:**
+
+- `schemas.py` — `TaskItem`, `TaskSuiteConfig`, `CriterionConfig`, `RubricConfig` (Pydantic, `extra="forbid"`)
+- `loaders.py` — `load_task_suite()`, `load_rubric()` with SHA-256 content hashing for versioning
+- `examples/task_suites/` — `customer_support.yaml` (12 tasks), `code_review.yaml` (8 tasks), `math_word_problems.yaml` (10 tasks)
+- `examples/rubrics/` — `helpfulness.yaml` (4 criteria), `safety.yaml` (3 criteria)
+- CLI: `arena tasks list <path>` and `arena tasks show <path> <task-id>`
+- 15 unit tests covering valid loads, validation errors, hash stability, and all example files
+
+```bash
+# Inspect a task suite
+arena tasks list examples/task_suites/customer_support.yaml
+arena tasks show examples/task_suites/customer_support.yaml cs-007
+
+# Load programmatically
+from agent_arena import load_task_suite, load_rubric
+suite = load_task_suite("examples/task_suites/customer_support.yaml")
+rubric = load_rubric("examples/rubrics/helpfulness.yaml")
+print(suite.content_hash)  # SHA-256 fingerprint for versioning
+```
+
+**What M2 shipped:**
 
 - `AgentConfig`, `Task`, `Run`, `Span` — Pydantic/SQLModel models persisted to SQLite
 - `db.py` — `init_db()`, `get_session()`, configurable via `ARENA_DB_URL` env var
@@ -72,7 +93,21 @@ export ANTHROPIC_API_KEY=sk-ant-...
 # Run tests (no API key needed — uses mocked LLM clients)
 pytest
 
-# Use the runner directly
+# Inspect task suites (M3)
+arena tasks list examples/task_suites/customer_support.yaml
+arena tasks show examples/task_suites/customer_support.yaml cs-007
+
+# Load task suites and rubrics programmatically (M3)
+python - <<'EOF'
+from agent_arena import load_task_suite, load_rubric
+
+suite = load_task_suite("examples/task_suites/customer_support.yaml")
+rubric = load_rubric("examples/rubrics/helpfulness.yaml")
+print(suite.name, suite.version, len(suite.tasks), "tasks")
+print("hash:", suite.content_hash)
+EOF
+
+# Use the runner directly (M2)
 python - <<'EOF'
 from agent_arena import AgentConfig, AgentRunner, Task, init_db
 from sqlmodel import Session, create_engine
@@ -91,7 +126,7 @@ with Session(engine) as session:
 EOF
 ```
 
-> Full CLI (`arena run`, `arena demo`) and the Streamlit dashboard are coming in M5+.
+> `arena run`, `arena judge`, `arena compare`, and the Streamlit dashboard are coming in M5+.
 
 ---
 
@@ -101,7 +136,7 @@ EOF
 |-----------|-------------|--------|
 | M1 | Scaffold: repo layout, pyproject.toml, CI, pre-commit, LICENSE | Done |
 | M2 | Core agent runner + provider abstraction + SQLite persistence | Done |
-| M3 | YAML task suites; `python_exec_sandbox` tool | |
+| M3 | YAML task suites + rubrics; content hashing; CLI `arena tasks` | Done |
 | M4 | LLM-as-judge with YAML rubrics | |
 | M5 | FastAPI backend + CLI (`arena run` / `judge` / `compare`) | |
 | M6 | Streamlit dashboard: config manager + task browser | |

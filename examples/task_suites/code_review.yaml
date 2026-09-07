@@ -1,0 +1,88 @@
+name: code_review
+description: "8 Python snippets with bugs or style issues for agent review."
+version: "1.0"
+tasks:
+  - id: cr-001
+    input: |
+      def divide(a, b):
+          return a / b
+
+      print(divide(10, 0))
+    reference: "Bug: ZeroDivisionError when b=0. Add a guard: `if b == 0: raise ValueError('divisor cannot be zero')` or return None."
+    meta: {language: python, issue_type: bug}
+
+  - id: cr-002
+    input: |
+      import os, sys, json
+      from pathlib import Path
+
+      def read_config(path):
+          with open(path) as f:
+              return json.load(f)
+    reference: "Style: combine imports on separate lines per PEP 8 (`import os`, `import sys`, `import json`). The `sys` import is also unused."
+    meta: {language: python, issue_type: style}
+
+  - id: cr-003
+    input: |
+      password = "hunter2"
+      query = f"SELECT * FROM users WHERE password = '{password}'"
+      cursor.execute(query)
+    reference: "Security: SQL injection risk. Use parameterised queries: `cursor.execute('SELECT * FROM users WHERE password = ?', (password,))`."
+    meta: {language: python, issue_type: security}
+
+  - id: cr-004
+    input: |
+      def get_items(lst=[]):
+          lst.append("item")
+          return lst
+
+      print(get_items())
+      print(get_items())
+    reference: "Bug: mutable default argument causes shared state across calls. Use `def get_items(lst=None): if lst is None: lst = []` instead."
+    meta: {language: python, issue_type: bug}
+
+  - id: cr-005
+    input: |
+      class MyClass:
+          def __init__(self):
+              self.value = 0
+
+          def increment(self):
+              self.value = self.value + 1
+              return self
+    reference: "Style: `self.value + 1` can be simplified to `self.value += 1`. Otherwise the method is fine (fluent interface)."
+    meta: {language: python, issue_type: style}
+
+  - id: cr-006
+    input: |
+      import subprocess
+
+      def run_command(user_input):
+          result = subprocess.run(user_input, shell=True, capture_output=True)
+          return result.stdout
+    reference: "Security: `shell=True` with unsanitized user_input enables shell injection. Pass a list instead: `subprocess.run(user_input.split(), capture_output=True)` and validate input."
+    meta: {language: python, issue_type: security}
+
+  - id: cr-007
+    input: |
+      def find_max(numbers):
+          max_val = 0
+          for n in numbers:
+              if n > max_val:
+                  max_val = n
+          return max_val
+
+      print(find_max([-5, -1, -3]))
+    reference: "Bug: initialising max_val to 0 fails for all-negative lists (returns 0). Use `max_val = numbers[0]` or `return max(numbers)` and handle empty list."
+    meta: {language: python, issue_type: bug}
+
+  - id: cr-008
+    input: |
+      def process(data):
+          try:
+              result = int(data)
+          except:
+              result = None
+          return result
+    reference: "Style/bug: bare `except:` catches BaseException including KeyboardInterrupt. Use `except (ValueError, TypeError):` to be specific about what errors are expected."
+    meta: {language: python, issue_type: bug}

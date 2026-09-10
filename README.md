@@ -12,9 +12,21 @@ Agent engineering has shifted from "can you make it work?" to "can you prove ver
 
 ## Status
 
-M5 — Arena engine complete. Full head-to-head evaluation pipeline: `Judge` (LLM-as-judge), `Arena` orchestrator (N configs × all tasks), aggregation (win rates, per-criterion means, bootstrap CIs), FastAPI backend, and functional `arena run` / `arena compare` CLI commands.
+M6 — Streamlit dashboard complete. Multi-page dashboard wired to the FastAPI backend, with new API endpoints, a **Run Demo** button, and a `arena dashboard` CLI command.
 
-**What M5 ships:**
+**What M6 ships:**
+
+- `dashboard/app.py` — home page with API health indicator; entry point for `arena dashboard`
+- `dashboard/pages/1_Configs.py` — full CRUD for agent configs (list, create, delete)
+- `dashboard/pages/2_Task_Suites.py` — browse YAML task suites, inspect tasks in a dataframe
+- `dashboard/pages/3_Rubrics.py` — browse YAML rubrics, inspect criteria in a dataframe
+- `dashboard/pages/4_Arena.py` — run evaluations, Plotly radar chart + win-rate heatmap, per-task breakdown; **Run Demo** button calls `POST /arena/demo`
+- `dashboard/api_client.py` — synchronous httpx wrapper with clear error messages
+- `api.py` — 5 new endpoints: `GET /task-suites`, `GET /rubrics`, `DELETE /configs/{id}`, `GET /arena/runs/{id}`, `POST /arena/demo`
+- `cli.py` — `arena dashboard` (launches Streamlit) and updated `arena demo` (prints instructions)
+- 10 new tests in `tests/test_dashboard_api.py`
+
+**What M5 shipped:**
 
 - `judge.py` — `Judge` class: LLM-as-judge with one criterion per call, JSON parse with one retry, Anthropic + OpenAI support
 - `arena.py` — `Arena` orchestrator: sequential config × task loop, persists `ArenaRun`, calls judge per run; `get_results()` returns `ArenaResults` with win rates, per-criterion `CriterionStats` (mean + bootstrap 95% CI), per-task breakdown
@@ -69,7 +81,7 @@ print(suite.content_hash)  # SHA-256 fingerprint for versioning
 - **YAML task suites & rubrics** — version-control your evals alongside your code
 - **LLM-as-judge** — per-criterion scoring (0–5) with written justification
 - **Head-to-head aggregation** — win rates, per-criterion mean scores, per-task breakdowns, bootstrap 95% confidence intervals
-- **Streamlit dashboard** — live run view, leaderboard, heatmap, trace viewer
+- **Streamlit dashboard** — multi-page app: config CRUD, task/rubric browser, live progress bar, leaderboard, per-config radar chart, head-to-head win-rate heatmap; trace viewer (M7)
 
 ---
 
@@ -118,12 +130,14 @@ arena run examples/task_suites/math_word_problems.yaml \
 # Compare results
 arena compare <arena-run-id>
 
-# Start the REST API
+# Start the REST API (terminal 1)
 uvicorn agent_arena.api:app --reload
-# POST /arena/run  GET /arena/results/{id}  GET /configs
-```
 
-> Streamlit dashboard is coming in M6+.
+# Start the Streamlit dashboard (terminal 2)
+arena dashboard
+
+# Open http://localhost:8501, go to Arena page, click "Run Demo"
+```
 
 ---
 
@@ -136,8 +150,8 @@ uvicorn agent_arena.api:app --reload
 | M3 | YAML task suites + rubrics; content hashing; CLI `arena tasks` | Done |
 | M4 | LLM-as-judge with YAML rubrics | Done |
 | M5 | Arena engine: head-to-head aggregation + FastAPI + CLI | Done |
-| M6 | Streamlit dashboard: config manager + task browser | |
-| M7 | Live run view + leaderboard + head-to-head heatmap | |
+| M6 | Streamlit dashboard: config manager + task browser + leaderboard + heatmap | Done |
+| M7 | Trace viewer + demo.gif | |
 | M8 | Trace viewer + demo.gif + docs | |
 
 ---

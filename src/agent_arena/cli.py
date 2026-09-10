@@ -267,9 +267,41 @@ def judge():
 
 
 @app.command()
+def dashboard(
+    port: int = typer.Option(8501, help="Streamlit port"),
+    api_url: str = typer.Option("http://localhost:8000", help="FastAPI base URL"),
+):
+    """Launch the Streamlit dashboard."""
+    import subprocess
+    import sys
+    import os
+
+    dashboard_path = Path(__file__).parent / "dashboard" / "app.py"
+    env = {**os.environ, "ARENA_API_URL": api_url}
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            str(dashboard_path),
+            "--server.port",
+            str(port),
+        ],
+        env=env,
+    )
+
+
+@app.command()
 def demo():
-    """Launch the demo with pre-built configs and tasks."""
-    typer.echo("Demo coming in M6.")
+    """Seed demo data and open the dashboard."""
+    typer.echo("Run in two terminals:")
+    typer.echo("  1) uvicorn agent_arena.api:app --reload")
+    typer.echo("  2) arena dashboard")
+    typer.echo("")
+    typer.echo(
+        "Then click 'Run Demo' on the Arena page, or call POST /arena/demo directly."
+    )
 
 
 if __name__ == "__main__":

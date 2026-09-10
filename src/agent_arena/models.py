@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Literal
+from typing import Literal  # noqa: F401
 
 from pydantic import BaseModel, Field as PydanticField
 from sqlalchemy import Column, JSON
@@ -36,6 +36,7 @@ class Run(SQLModel, table=True):
     """Persisted record of one agent execution on one task."""
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    arena_run_id: str | None = Field(default=None, index=True)
     config_id: str
     task_id: str
     output: str | None = None
@@ -56,3 +57,28 @@ class Span(SQLModel, table=True):
     output: str  # JSON string
     latency_ms: int
     tokens: int | None = None  # LLM spans only
+
+
+class Judgement(SQLModel, table=True):
+    """Persisted LLM-as-judge score for one criterion of one Run."""
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    run_id: str
+    rubric_id: str          # content_hash of the rubric file
+    criterion: str
+    score: float            # 0–scale (from CriterionConfig.scale)
+    justification: str
+    judge_model: str
+
+
+class ArenaRun(SQLModel, table=True):
+    """Persisted record of one full Arena execution (N configs × all tasks)."""
+
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    config_ids: list = Field(default_factory=list, sa_column=Column(JSON))
+    task_suite_hash: str
+    rubric_hash: str
+    status: str = "pending"   # pending | running | done | error
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    finished_at: datetime | None = None
+    error: str | None = None

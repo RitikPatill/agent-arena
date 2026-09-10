@@ -25,6 +25,8 @@ dependencies = [
 
 [project.scripts]
 arena = "agent_arena.cli:app"
+# arena-api is intentionally omitted: FastAPI ASGI apps cannot be invoked as CLI entry
+# points. Use `uvicorn agent_arena.api:app --reload` as documented in the README.
 
 [project.optional-dependencies]
 dev = [

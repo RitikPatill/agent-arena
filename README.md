@@ -12,9 +12,18 @@ Agent engineering has shifted from "can you make it work?" to "can you prove ver
 
 ## Status
 
-M3 — YAML task suites and rubrics complete. Pydantic-validated loaders with SHA-256 content hashing, five example YAML files, and CLI inspection commands are implemented and tested.
+M5 — Arena engine complete. Full head-to-head evaluation pipeline: `Judge` (LLM-as-judge), `Arena` orchestrator (N configs × all tasks), aggregation (win rates, per-criterion means, bootstrap CIs), FastAPI backend, and functional `arena run` / `arena compare` CLI commands.
 
-**What M3 ships:**
+**What M5 ships:**
+
+- `judge.py` — `Judge` class: LLM-as-judge with one criterion per call, JSON parse with one retry, Anthropic + OpenAI support
+- `arena.py` — `Arena` orchestrator: sequential config × task loop, persists `ArenaRun`, calls judge per run; `get_results()` returns `ArenaResults` with win rates, per-criterion `CriterionStats` (mean + bootstrap 95% CI), per-task breakdown
+- `api.py` — FastAPI app: `POST /arena/run`, `GET /arena/results/{id}`, `GET/POST /configs`, `GET /arena/runs`
+- `cli.py` — `arena run` (with live progress), `arena compare` (formatted table), `arena configs create/list`
+- `models.py` — added `Judgement` and `ArenaRun` SQLModel tables
+- 8 new tests (35 total): judge JSON parsing, retry logic, persistence, weighted scoring, bootstrap CI, win-rate invariants, end-to-end mocked run
+
+**What M3 shipped:**
 
 - `schemas.py` — `TaskItem`, `TaskSuiteConfig`, `CriterionConfig`, `RubricConfig` (Pydantic, `extra="forbid"`)
 - `loaders.py` — `load_task_suite()`, `load_rubric()` with SHA-256 content hashing for versioning
@@ -59,7 +68,7 @@ print(suite.content_hash)  # SHA-256 fingerprint for versioning
 - **Built-in tools** — `web_search_stub`, `calculator`, `python_exec_sandbox` + user-defined tool decorator
 - **YAML task suites & rubrics** — version-control your evals alongside your code
 - **LLM-as-judge** — per-criterion scoring (0–5) with written justification
-- **Head-to-head aggregation** — win rates, mean scores, per-task breakdowns
+- **Head-to-head aggregation** — win rates, per-criterion mean scores, per-task breakdowns, bootstrap 95% confidence intervals
 - **Streamlit dashboard** — live run view, leaderboard, heatmap, trace viewer
 
 ---
@@ -93,40 +102,28 @@ export ANTHROPIC_API_KEY=sk-ant-...
 # Run tests (no API key needed — uses mocked LLM clients)
 pytest
 
-# Inspect task suites (M3)
+# Inspect task suites
 arena tasks list examples/task_suites/customer_support.yaml
 arena tasks show examples/task_suites/customer_support.yaml cs-007
 
-# Load task suites and rubrics programmatically (M3)
-python - <<'EOF'
-from agent_arena import load_task_suite, load_rubric
+# Create agent configs
+arena configs create "claude-baseline" anthropic claude-haiku-4-5-20251001
+arena configs list   # prints IDs
 
-suite = load_task_suite("examples/task_suites/customer_support.yaml")
-rubric = load_rubric("examples/rubrics/helpfulness.yaml")
-print(suite.name, suite.version, len(suite.tasks), "tasks")
-print("hash:", suite.content_hash)
-EOF
+# Run arena (requires ANTHROPIC_API_KEY)
+arena run examples/task_suites/math_word_problems.yaml \
+           examples/rubrics/helpfulness.yaml \
+           -c <config-id-1> -c <config-id-2>
 
-# Use the runner directly (M2)
-python - <<'EOF'
-from agent_arena import AgentConfig, AgentRunner, Task, init_db
-from sqlmodel import Session, create_engine
+# Compare results
+arena compare <arena-run-id>
 
-init_db()
-engine = create_engine("sqlite:///arena.db", connect_args={"check_same_thread": False})
-with Session(engine) as session:
-    config = AgentConfig(
-        name="demo", provider="anthropic", model="claude-3-haiku-20240307",
-        system_prompt="You are a helpful assistant.", tools=["calculator"], params={},
-    )
-    session.add(config); session.commit()
-    runner = AgentRunner(config, session)
-    run = runner.run(Task(input="What is 123 * 456?"))
-    print(run.status, run.output)
-EOF
+# Start the REST API
+uvicorn agent_arena.api:app --reload
+# POST /arena/run  GET /arena/results/{id}  GET /configs
 ```
 
-> `arena run`, `arena judge`, `arena compare`, and the Streamlit dashboard are coming in M5+.
+> Streamlit dashboard is coming in M6+.
 
 ---
 
@@ -137,8 +134,8 @@ EOF
 | M1 | Scaffold: repo layout, pyproject.toml, CI, pre-commit, LICENSE | Done |
 | M2 | Core agent runner + provider abstraction + SQLite persistence | Done |
 | M3 | YAML task suites + rubrics; content hashing; CLI `arena tasks` | Done |
-| M4 | LLM-as-judge with YAML rubrics | |
-| M5 | FastAPI backend + CLI (`arena run` / `judge` / `compare`) | |
+| M4 | LLM-as-judge with YAML rubrics | Done |
+| M5 | Arena engine: head-to-head aggregation + FastAPI + CLI | Done |
 | M6 | Streamlit dashboard: config manager + task browser | |
 | M7 | Live run view + leaderboard + head-to-head heatmap | |
 | M8 | Trace viewer + demo.gif + docs | |

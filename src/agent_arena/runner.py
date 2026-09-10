@@ -18,10 +18,17 @@ DEFAULT_MAX_TURNS = 10
 class AgentRunner:
     """Runs an agent config against a task, persisting spans to the DB."""
 
-    def __init__(self, config: AgentConfig, db_session: Session, max_turns: int = DEFAULT_MAX_TURNS) -> None:
+    def __init__(
+        self,
+        config: AgentConfig,
+        db_session: Session,
+        max_turns: int = DEFAULT_MAX_TURNS,
+        arena_run_id: str | None = None,
+    ) -> None:
         self.config = config
         self.session = db_session
         self.max_turns = max_turns
+        self.arena_run_id = arena_run_id
 
     # ------------------------------------------------------------------
     # Public API
@@ -31,6 +38,7 @@ class AgentRunner:
         """Execute the agent loop for one task. Returns completed Run."""
         run = Run(
             id=str(uuid.uuid4()),
+            arena_run_id=self.arena_run_id,
             config_id=self.config.id,
             task_id=task.id,
             status="running",

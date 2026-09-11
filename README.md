@@ -10,7 +10,49 @@ Agent engineering has shifted from "can you make it work?" to "can you prove ver
 
 ---
 
+## Run the demo in 2 minutes
+
+```bash
+git clone https://github.com/agent-arena/agent-arena
+cd agent-arena
+pip install -e ".[dev]"
+export ANTHROPIC_API_KEY=sk-ant-...
+
+python examples/quickstart.py          # runs 3 tasks × 2 configs, prints comparison
+```
+
+You'll see a win-rate matrix and per-criterion scores in your terminal.
+
+For the full visual experience:
+
+```bash
+uvicorn agent_arena.api:app --reload &  # terminal 1
+arena dashboard                          # terminal 2 → http://localhost:8501
+```
+
+Open the **Arena** page, click **Run Demo**, then click any score cell to open the Trace Viewer.
+
+![Dashboard leaderboard](docs/screenshot.png)
+![Trace viewer](docs/trace.png)
+
+### CLI recording
+
+To record a CLI demo with asciinema: `bash scripts/record_demo.sh`
+
+---
+
 ## Status
+
+M8 — Demo + screenshots. `examples/quickstart.py` seeds demo data, runs a 2-config arena, and prints a formatted comparison table. `scripts/record_demo.sh` automates CLI recording with asciinema. Placeholder images in `docs/` so the README renders on GitHub.
+
+**What M8 ships:**
+
+- `examples/quickstart.py` — standalone script: creates two configs, runs 3 tasks × 2 configs, judges outputs, prints win-rate matrix and per-criterion mean scores
+- `scripts/record_demo.sh` — asciinema recording script with embedded demo commands
+- `docs/screenshot.png`, `docs/trace.png`, `docs/demo.gif` — placeholder images (replace with real screenshots after recording)
+- `tests/test_quickstart.py` — test that `main()` completes with mocked LLM
+
+**What M7 shipped:**
 
 M7 — Trace viewer for individual runs. Per-run detail page with a waterfall/timeline of spans, collapsible JSON inputs/outputs, judgements side panel, and deep-links from the per-task breakdown table in the Arena page.
 
@@ -90,6 +132,7 @@ print(suite.content_hash)  # SHA-256 fingerprint for versioning
 - **LLM-as-judge** — per-criterion scoring (0–5) with written justification
 - **Head-to-head aggregation** — win rates, per-criterion mean scores, per-task breakdowns, bootstrap 95% confidence intervals
 - **Streamlit dashboard** — multi-page app: config CRUD, task/rubric browser, live progress bar, leaderboard, per-config radar chart, head-to-head win-rate heatmap; trace viewer (M7)
+- **Runnable demo** — `examples/quickstart.py` seeds two configs, runs 3 tasks × 2 configs end-to-end, and prints a formatted win-rate matrix and per-criterion score table; `scripts/record_demo.sh` automates CLI capture with asciinema
 
 ---
 
@@ -163,7 +206,7 @@ arena dashboard
 | M5 | Arena engine: head-to-head aggregation + FastAPI + CLI | Done |
 | M6 | Streamlit dashboard: config manager + task browser + leaderboard + heatmap | Done |
 | M7 | Trace viewer: per-run waterfall, judgements panel, deep-links | Done |
-| M8 | demo.gif + docs | |
+| M8 | Runnable demo: `quickstart.py`, asciinema recording script, `docs/` screenshots | Done |
 
 ---
 

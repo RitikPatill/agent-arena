@@ -9,12 +9,13 @@ from pathlib import Path
 import yaml
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import text
 from sqlmodel import Session, select
 
 from .arena import Arena
 from .db import get_session, init_db
 from .loaders import load_rubric, load_task_suite
-from .models import AgentConfig, ArenaRun
+from .models import AgentConfig, ArenaRun, Judgement, Run, Span
 
 EXAMPLES_DIR = Path(__file__).parent.parent.parent / "examples"
 
@@ -166,6 +167,110 @@ def get_arena_run(arena_id: str, session: Session = Depends(get_session)) -> dic
         "finished_at": arena_run.finished_at.isoformat() if arena_run.finished_at else None,
         "error": arena_run.error,
     }
+
+
+@app.get("/runs/{run_id}")
+def get_run(run_id: str, session: Session = Depends(get_session)) -> dict:
+    """Return Run metadata with config_name resolved. 404 if not found."""
+    run = session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
+    config = session.get(AgentConfig, run.config_id)
+    config_name = config.name if config else run.config_id[:8]
+    return {
+        "id": run.id,
+        "arena_run_id": run.arena_run_id,
+        "config_id": run.config_id,
+        "config_name": config_name,
+        "task_id": run.task_id,
+        "output": run.output,
+        "status": run.status,
+        "started_at": run.started_at.isoformat() if run.started_at else None,
+        "finished_at": run.finished_at.isoformat() if run.finished_at else None,
+        "error": run.error,
+    }
+
+
+@app.get("/runs/{run_id}/spans")
+def get_run_spans(run_id: str, session: Session = Depends(get_session)) -> list[dict]:
+    """Return spans for a run ordered by rowid (insertion order)."""
+    run = session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
+    spans = session.exec(
+        select(Span).where(Span.run_id == run_id).order_by(text("rowid"))
+    ).all()
+    return [
+        {
+            "id": s.id,
+            "run_id": s.run_id,
+            "kind": s.kind,
+            "name": s.name,
+            "input": s.input,
+            "output": s.output,
+            "latency_ms": s.latency_ms,
+            "tokens": s.tokens,
+        }
+        for s in spans
+    ]
+
+
+@app.get("/runs/{run_id}/judgements")
+def get_run_judgements(
+    run_id: str, session: Session = Depends(get_session)
+) -> list[dict]:
+    """Return all judgements for a run."""
+    run = session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
+    judgements = session.exec(
+        select(Judgement).where(Judgement.run_id == run_id)
+    ).all()
+    return [
+        {
+            "id": j.id,
+            "run_id": j.run_id,
+            "rubric_id": j.rubric_id,
+            "criterion": j.criterion,
+            "score": j.score,
+            "justification": j.justification,
+            "judge_model": j.judge_model,
+        }
+        for j in judgements
+    ]
+
+
+@app.get("/arena/{arena_id}/runs")
+def get_arena_run_list(
+    arena_id: str, session: Session = Depends(get_session)
+) -> list[dict]:
+    """Return all runs for an arena_id with config_name resolved. 404 if none."""
+    runs = session.exec(select(Run).where(Run.arena_run_id == arena_id)).all()
+    if not runs:
+        raise HTTPException(
+            status_code=404, detail=f"No runs found for arena '{arena_id}'"
+        )
+    result = []
+    for run in runs:
+        config = session.get(AgentConfig, run.config_id)
+        config_name = config.name if config else run.config_id[:8]
+        result.append(
+            {
+                "id": run.id,
+                "arena_run_id": run.arena_run_id,
+                "config_id": run.config_id,
+                "config_name": config_name,
+                "task_id": run.task_id,
+                "output": run.output,
+                "status": run.status,
+                "started_at": run.started_at.isoformat() if run.started_at else None,
+                "finished_at": (
+                    run.finished_at.isoformat() if run.finished_at else None
+                ),
+                "error": run.error,
+            }
+        )
+    return result
 
 
 @app.post("/arena/demo", response_model=dict)

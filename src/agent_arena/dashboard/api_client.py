@@ -82,3 +82,19 @@ def start_arena_run(payload: dict) -> dict:
 
 def run_demo() -> dict:
     return _post("/arena/demo")
+
+
+def get_arena_run_list(arena_id: str) -> list[dict]:
+    return _get(f"/arena/{arena_id}/runs")  # type: ignore[return-value]
+
+
+def get_run(run_id: str) -> dict:
+    return _get(f"/runs/{run_id}")  # type: ignore[return-value]
+
+
+def get_run_spans(run_id: str) -> list[dict]:
+    return _get(f"/runs/{run_id}/spans")  # type: ignore[return-value]
+
+
+def get_run_judgements(run_id: str) -> list[dict]:
+    return _get(f"/runs/{run_id}/judgements")  # type: ignore[return-value]

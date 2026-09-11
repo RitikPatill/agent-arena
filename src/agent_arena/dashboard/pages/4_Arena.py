@@ -222,15 +222,61 @@ if arena_id:
         )
         st.plotly_chart(fig_heat, use_container_width=True)
 
-    # 4. Per-task breakdown
+    # 4. Per-task breakdown with deep-links to trace viewer
     if per_task:
         st.subheader("Per-task Scores")
-        rows = []
-        for task_id, scores_by_config in per_task.items():
-            row = {"task_id": task_id}
-            for cid in config_ids:
-                row[id_to_name.get(cid, cid[:8])] = round(
-                    scores_by_config.get(cid, 0.0), 3
-                )
-            rows.append(row)
-        st.dataframe(rows, use_container_width=True)
+
+        # Build run_id lookup: (config_name, task_id) -> run_id
+        run_id_lookup: dict[tuple[str, str], str] = {}
+        try:
+            arena_run_list = api_client.get_arena_run_list(arena_id)
+            for r in arena_run_list:
+                key = (r.get("config_name", r["config_id"][:8]), r["task_id"])
+                run_id_lookup[key] = r["id"]
+        except RuntimeError:
+            pass  # fall back to plain table if API unavailable
+
+        config_display_names = [id_to_name.get(cid, cid[:8]) for cid in config_ids]
+        task_ids = list(per_task.keys())
+
+        if run_id_lookup:
+            # Render interactive grid with deep-link buttons
+            header_cols = st.columns([2] + [1] * len(config_display_names))
+            header_cols[0].markdown("**Task**")
+            for ci, cname in enumerate(config_display_names):
+                header_cols[ci + 1].markdown(f"**{cname}**")
+
+            for task_id in task_ids:
+                scores_by_config = per_task[task_id]
+                row_cols = st.columns([2] + [1] * len(config_display_names))
+                row_cols[0].write(task_id)
+                for ci, (cid, cname) in enumerate(
+                    zip(config_ids, config_display_names)
+                ):
+                    score = round(scores_by_config.get(cid, 0.0), 3)
+                    rid = run_id_lookup.get((cname, task_id))
+                    if rid:
+                        try:
+                            row_cols[ci + 1].page_link(
+                                "pages/5_Trace_Viewer.py",
+                                label=str(score),
+                                query_params={"run_id": rid},
+                            )
+                        except Exception:
+                            row_cols[ci + 1].markdown(
+                                f"[{score}](/Trace_Viewer?run_id={rid})",
+                                unsafe_allow_html=True,
+                            )
+                    else:
+                        row_cols[ci + 1].write(score)
+        else:
+            # Fallback: plain dataframe
+            rows = []
+            for task_id, scores_by_config in per_task.items():
+                row = {"task_id": task_id}
+                for cid in config_ids:
+                    row[id_to_name.get(cid, cid[:8])] = round(
+                        scores_by_config.get(cid, 0.0), 3
+                    )
+                rows.append(row)
+            st.dataframe(rows, use_container_width=True)

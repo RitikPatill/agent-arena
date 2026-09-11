@@ -12,9 +12,17 @@ Agent engineering has shifted from "can you make it work?" to "can you prove ver
 
 ## Status
 
-M6 — Streamlit dashboard complete. Multi-page dashboard wired to the FastAPI backend, with new API endpoints, a **Run Demo** button, and a `arena dashboard` CLI command.
+M7 — Trace viewer for individual runs. Per-run detail page with a waterfall/timeline of spans, collapsible JSON inputs/outputs, judgements side panel, and deep-links from the per-task breakdown table in the Arena page.
 
-**What M6 ships:**
+**What M7 ships:**
+
+- `dashboard/pages/5_Trace_Viewer.py` — per-run trace page: Plotly horizontal waterfall chart of spans (LLM=blue, tool=orange), collapsible expanders with JSON input/output, left panel with run metadata + per-criterion judgement scores and justifications; deep-linkable via `?run_id=<id>`
+- `dashboard/pages/4_Arena.py` — per-task breakdown now renders clickable score cells that deep-link to the trace viewer (falls back to plain table if API unavailable)
+- `api.py` — 4 new endpoints: `GET /runs/{run_id}`, `GET /runs/{run_id}/spans`, `GET /runs/{run_id}/judgements`, `GET /arena/{arena_id}/runs`
+- `dashboard/api_client.py` — 4 new client methods: `get_run`, `get_run_spans`, `get_run_judgements`, `get_arena_run_list`
+- `tests/test_trace_api.py` — 12 new tests covering 404 on missing run, span ordering (insertion order via rowid), judgement field presence, config_name resolution, and arena run list
+
+**What M6 shipped:**
 
 - `dashboard/app.py` — home page with API health indicator; entry point for `arena dashboard`
 - `dashboard/pages/1_Configs.py` — full CRUD for agent configs (list, create, delete)
@@ -137,6 +145,9 @@ uvicorn agent_arena.api:app --reload
 arena dashboard
 
 # Open http://localhost:8501, go to Arena page, click "Run Demo"
+# After the run completes, click any score cell in the per-task breakdown
+# table to open the Trace Viewer (page 5) for that run.
+# Direct URL: http://localhost:8501/Trace_Viewer?run_id=<run-id>
 ```
 
 ---
@@ -151,8 +162,8 @@ arena dashboard
 | M4 | LLM-as-judge with YAML rubrics | Done |
 | M5 | Arena engine: head-to-head aggregation + FastAPI + CLI | Done |
 | M6 | Streamlit dashboard: config manager + task browser + leaderboard + heatmap | Done |
-| M7 | Trace viewer + demo.gif | |
-| M8 | Trace viewer + demo.gif + docs | |
+| M7 | Trace viewer: per-run waterfall, judgements panel, deep-links | Done |
+| M8 | demo.gif + docs | |
 
 ---
 

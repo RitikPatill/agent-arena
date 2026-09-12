@@ -1,5 +1,9 @@
 # AgentArena
 
+
+> **Video walkthrough:** https://youtu.be/G1DcT4BMSz4
+> **60-second overview:** https://youtu.be/31n8B-MZrkM
+
 > Pit two agent configurations against each other on real tasks, score with rubric-based LLM-as-judge, and visualize win rates + traces in a live dashboard.
 
 [![CI](https://github.com/RitikPatill/agent-arena/actions/workflows/ci.yml/badge.svg)](https://github.com/RitikPatill/agent-arena/actions/workflows/ci.yml)
